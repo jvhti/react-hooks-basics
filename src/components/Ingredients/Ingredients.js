@@ -1,4 +1,4 @@
-import React, {useCallback, useReducer} from 'react';
+import React, {useCallback, useMemo, useReducer} from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from "./IngredientList";
@@ -71,6 +71,10 @@ function Ingredients() {
 
   const clearError = useCallback(() => dispatchToHttp({type: 'CLEAR_ERROR'}), []);
 
+  const ingredientList = useMemo(() => {
+    return <IngredientList ingredients={ingredients} onRemoveItem={removeIngredientHandler}/>;
+  }, [ingredients, removeIngredientHandler]);
+
   return (
       <div className="App">
         {httpState.error && <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>}
@@ -78,7 +82,7 @@ function Ingredients() {
 
         <section>
           <Search onLoadIngredients={filteredIngredientsHandler}/>
-          <IngredientList ingredients={ingredients} onRemoveItem={removeIngredientHandler}/>
+          {ingredientList}
         </section>
       </div>
   );
