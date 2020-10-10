@@ -37,7 +37,7 @@ function Ingredients() {
   const [ingredients, dispatchToIngredients] = useReducer(ingredientReducer, []);
   const [httpState, dispatchToHttp] = useReducer(httpReducer, {isLoading: false, error: null});
 
-  const addIngredientHandler = ingredient => {
+  const addIngredientHandler = useCallback(ingredient => {
     dispatchToHttp({type: 'SEND'});
     fetch('https://ingredients-list-a6589.firebaseio.com/ingredients.json', {
       method: 'POST',
@@ -51,9 +51,9 @@ function Ingredients() {
     }).catch(error => {
       dispatchToHttp({type: 'ERROR', error: "Something went wrong!"});
     });
-  };
+  }, []);
 
-  const removeIngredientHandler = id => {
+  const removeIngredientHandler = useCallback(id => {
     dispatchToHttp({type: 'SEND'});
     fetch(`https://ingredients-list-a6589.firebaseio.com/ingredients/${id}.json`, {
       method: 'DELETE'
@@ -63,13 +63,13 @@ function Ingredients() {
     }).catch(error => {
       dispatchToHttp({type: 'ERROR', error: "Something went wrong!"});
     });
-  }
+  }, []);
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
     dispatchToIngredients({type: 'SET', ingredients: filteredIngredients})
   }, []);
 
-  const clearError = () => dispatchToHttp({type: 'CLEAR_ERROR'});
+  const clearError = useCallback(() => dispatchToHttp({type: 'CLEAR_ERROR'}), []);
 
   return (
       <div className="App">
