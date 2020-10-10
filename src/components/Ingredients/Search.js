@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import Card from '../UI/Card';
 import './Search.css';
@@ -6,26 +6,32 @@ import './Search.css';
 const Search = React.memo(props => {
   const {onLoadIngredients} = props;
   const [filter, setFilter] = useState('');
+  const inputRef = useRef();
 
   useEffect(() => {
-    const query = filter.length === 0 ? '' : `?orderBy="title"&equalTo="${filter}"`;
+    setTimeout(() => {
+      if (filter !== inputRef.current.value) return;
 
-    fetch('https://ingredients-list-a6589.firebaseio.com/ingredients.json' + query).then(res => res.json()).then(res => {
-      const loadedIngredients = [];
-      for (const key in res) {
-        loadedIngredients.push({id: key, title: res[key].title, amount: res[key].amount});
-      }
+      const query = filter.length === 0 ? '' : `?orderBy="title"&equalTo="${filter}"`;
 
-      onLoadIngredients(loadedIngredients);
-    });
-  }, [filter, onLoadIngredients]);
+      fetch('https://ingredients-list-a6589.firebaseio.com/ingredients.json' + query).then(res => res.json()).then(res => {
+        const loadedIngredients = [];
+        for (const key in res) {
+          loadedIngredients.push({id: key, title: res[key].title, amount: res[key].amount});
+        }
+
+        onLoadIngredients(loadedIngredients);
+      });
+    }, 500);
+    // Note: This is generating a lot of timeouts, could hurt the performance
+  }, [filter, onLoadIngredients, inputRef]);
 
   return (
       <section className="search">
         <Card>
           <div className="search-input">
             <label>Filter by Title</label>
-            <input type="text" value={filter} onChange={event => setFilter(event.target.value)}/>
+            <input ref={inputRef} type="text" value={filter} onChange={event => setFilter(event.target.value)}/>
           </div>
         </Card>
       </section>
