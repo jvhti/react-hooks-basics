@@ -1,4 +1,4 @@
-import React, {useCallback, useReducer, useState} from 'react';
+import React, {useCallback, useReducer} from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from "./IngredientList";
@@ -18,13 +18,27 @@ const ingredientReducer = (state, action) => {
   }
 };
 
+const httpReducer = (state, action) => {
+  switch (action.type) {
+    case 'SEND':
+      return {isLoading: true, error: null};
+    case 'RESPONSE':
+      return {...state, isLoading: false};
+    case 'ERROR':
+      return {isLoading: false, error: action.error};
+    case 'CLEAR_ERROR':
+      return {...state, error: null};
+    default:
+      throw new Error('Should not get here!');
+  }
+}
+
 function Ingredients() {
   const [ingredients, dispatchToIngredients] = useReducer(ingredientReducer, []);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState();
+  const [httpState, dispatchToHttp] = useReducer(httpReducer, {isLoading: false, error: null});
 
   const addIngredientHandler = ingredient => {
-    setIsLoading(true);
+    dispatchToHttp({type: 'SEND'});
     fetch('https://ingredients-list-a6589.firebaseio.com/ingredients.json', {
       method: 'POST',
       body: JSON.stringify(ingredient),
@@ -32,24 +46,22 @@ function Ingredients() {
     }).then(response => {
       return response.json();
     }).then(responseData => {
+      dispatchToHttp({type: 'RESPONSE'});
       dispatchToIngredients({type: 'ADD', ingredient: {id: responseData.name, ...ingredient}})
     }).catch(error => {
-      setError("Something went wrong!");
-    }).finally(() => {
-      setIsLoading(false);
+      dispatchToHttp({type: 'ERROR', error: "Something went wrong!"});
     });
   };
 
   const removeIngredientHandler = id => {
-    setIsLoading(true);
+    dispatchToHttp({type: 'SEND'});
     fetch(`https://ingredients-list-a6589.firebaseio.com/ingredients/${id}.json`, {
       method: 'DELETE'
     }).then(() => {
+      dispatchToHttp({type: 'RESPONSE'});
       dispatchToIngredients({type: 'DELETE', id})
     }).catch(error => {
-      setError("Something went wrong!");
-    }).finally(() => {
-      setIsLoading(false);
+      dispatchToHttp({type: 'ERROR', error: "Something went wrong!"});
     });
   }
 
@@ -57,12 +69,12 @@ function Ingredients() {
     dispatchToIngredients({type: 'SET', ingredients: filteredIngredients})
   }, []);
 
-  const clearError = () => setError(null);
+  const clearError = () => dispatchToHttp({type: 'CLEAR_ERROR'});
 
   return (
       <div className="App">
-        {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
-        <IngredientForm onAddIngredient={addIngredientHandler} loading={isLoading}/>
+        {httpState.error && <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>}
+        <IngredientForm onAddIngredient={addIngredientHandler} loading={httpState.isLoading}/>
 
         <section>
           <Search onLoadIngredients={filteredIngredientsHandler}/>
