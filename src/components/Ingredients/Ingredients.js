@@ -20,7 +20,11 @@ function Ingredients() {
   };
 
   const removeIngredientHandler = id => {
-    setIngredients(prevIngredients => prevIngredients.filter(x => x.id !== id));
+    fetch(`https://ingredients-list-a6589.firebaseio.com/ingredients/${id}.json`, {
+      method: 'DELETE'
+    }).then(() => {
+      setIngredients(prevIngredients => prevIngredients.filter(x => x.id !== id));
+    });
   }
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
